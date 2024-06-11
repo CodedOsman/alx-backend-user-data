@@ -2,12 +2,14 @@
 
 """DB module
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, tuple
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
+from sqlalchemy.orm.exc import NoResultFound
 
-from user import Base
+from user import Base, User
 
 
 class DB:
@@ -72,3 +74,18 @@ class DB:
         if not user:
             raise NoResultFound()
         return user
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """ Searches for user instance using given id parameter
+            Args:
+                - user_id: user's id
+            Return:
+                - User instance found
+        """
+        user = self.find_user_by(id=user_id)
+        session = self._session
+        for attr, val in kwargs.items():
+            if not hasattr(User, attr):
+                raise ValueError
+            setattr(user, attr, val)
+        session.commit()
